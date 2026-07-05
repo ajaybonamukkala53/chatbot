@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef2f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #chat-container {
+      width: 650px;
+      height: 650px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg {
+      margin: 6px 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .user {
+      background: #d1e7ff;
+      align-self: flex-end;
+    }
+    .bot {
+      background: #f0f0f0;
+      align-self: flex-start;
+    }
+    #input-area {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #history-container {
+      margin-top: 10px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .history-item {
+      background: #f9f9f9;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .history-item:hover {
+      background: #ececec;
+    }
+    #controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    #controls button {
+      background: #dc3545;
+    }
+    #controls button:hover {
+      background: #a71d2a;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>🤖 Gemini Chatbot</h2>
+    <div id="messages"></div>
+
+    <div id="input-area">
+      <input id="userInput" type="text" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <div id="controls">
+      <button onclick="clearChat()">🗑️ Clear Chat</button>
+      <button onclick="saveChat()">💾 Save</button>
+    </div>
+
+    <div id="history-container">
+      <strong>📜 History:</strong>
+      <div id="history"></div>
+    </div>
+  </div>
+
+  <script>
+    const messagesDiv = document.getElementById("messages");
+    const userInput = document.getElementById("userInput");
+    const historyDiv = document.getElementById("history");
+
+    let history = [];
+
+    function addMessage(text, sender) {
+      const msg = document.createElement("div");
+      msg.className = `msg ${sender}`;
+      msg.innerText = text;
+      messagesDiv.appendChild(msg);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      return msg;
+    }
+
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      userInput.value = "";
+
+      try {
+        const res = await fetch("http://localhost:5000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await res.json();
+        if (data.reply) {
+          addMessage(data.reply, "bot");
+          addToHistory(message, data.reply);
+          saveChat(); // auto-save after each reply
+        } else {
+          addMessage("⚠️ No response from server", "bot");
+        }
+      } catch (err) {
+        addMessage("❌ Error: " + err.message, "bot");
+      }
+    }
+
+    function addToHistory(userMsg, botMsg) {
+      const entry = { user: userMsg, bot: botMsg };
+      history.push(entry);
+
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerText = `You: ${userMsg}`;
+      item.onclick = () => {
+        addMessage("You (from history): " + entry.user, "user");
+        addMessage("Bot (from history): " + entry.bot, "bot");
+      };
+      historyDiv.appendChild(item);
+    }
+
+    function clearChat() {
+      messagesDiv.innerHTML = "";
+      history = [];
+      historyDiv.innerHTML = "";
+      localStorage.removeItem("savedChat");
+    }
+
+    function saveChat() {
+      localStorage.setItem("savedChat", JSON.stringify(history));
+    }
+
+    // 🔹 Load saved chat automatically into chat window
+    window.onload = () => {
+      const saved = localStorage.getItem("savedChat");
+      if (saved) {
+        history = JSON.parse(saved);
+        history.forEach(entry => {
+          addMessage(entry.user, "user");
+          addMessage(entry.bot, "bot");
+
+          const item = document.createElement("div");
+          item.className = "history-item";
+          item.innerText = `You: ${entry.user}`;
+          item.onclick = () => {
+            addMessage("You (from history): " + entry.user, "user");
+            addMessage("Bot (from history): " + entry.bot, "bot");
+          };
+          historyDiv.appendChild(item);
+        });
+      }
+    };
+
+    userInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
