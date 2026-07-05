@@ -14,6 +14,15 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+// Health check
+app.get("/", (req, res) => {
+  res.json({
+    status: "success",
+    message: "✅ Chatbot Backend is running!"
+  });
+});
+
+// Chat endpoint
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -39,11 +48,12 @@ app.post("/chat", async (req, res) => {
     res.json({
       reply: completion.choices[0].message.content,
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Groq Error:", error);
 
     res.status(500).json({
-      reply: "Error communicating with Groq API.",
+      error: error.message || "Internal Server Error",
     });
   }
 });
@@ -51,5 +61,5 @@ app.post("/chat", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
