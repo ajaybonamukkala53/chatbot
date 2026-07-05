@@ -1,326 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gemini Chatbot</title>
 
-  <style>
-    body{
-      font-family:Arial,sans-serif;
-      background:#eef2f7;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      margin:0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    #chat-container{
-      width:650px;
-      height:650px;
-      background:#fff;
-      padding:20px;
-      border-radius:12px;
-      box-shadow:0 4px 20px rgba(0,0,0,.15);
-      display:flex;
-      flex-direction:column;
-    }
+<title>AI Cyber Dashboard</title>
 
-    h2{
-      text-align:center;
-      margin-bottom:10px;
-    }
+<link rel="stylesheet" href="style.css">
 
-    #messages{
-      flex:1;
-      overflow-y:auto;
-      border:1px solid #ddd;
-      border-radius:8px;
-      padding:15px;
-      background:#fafafa;
-      display:flex;
-      flex-direction:column;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
 
-    .msg{
-      padding:10px 14px;
-      border-radius:10px;
-      margin:6px 0;
-      max-width:80%;
-      word-wrap:break-word;
-    }
-
-    .user{
-      background:#d1e7ff;
-      align-self:flex-end;
-    }
-
-    .bot{
-      background:#f0f0f0;
-      align-self:flex-start;
-    }
-
-    #input-area{
-      display:flex;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    input{
-      flex:1;
-      padding:12px;
-      border-radius:8px;
-      border:1px solid #ccc;
-      font-size:15px;
-    }
-
-    button{
-      padding:12px 18px;
-      border:none;
-      border-radius:8px;
-      background:#007bff;
-      color:white;
-      cursor:pointer;
-    }
-
-    button:hover{
-      background:#0056b3;
-    }
-
-    #controls{
-      margin-top:10px;
-      display:flex;
-      justify-content:space-between;
-    }
-
-    #controls button:first-child{
-      background:#dc3545;
-    }
-
-    #controls button:first-child:hover{
-      background:#a71d2a;
-    }
-
-    #history-container{
-      margin-top:10px;
-      border-top:1px solid #ddd;
-      padding-top:10px;
-      max-height:150px;
-      overflow-y:auto;
-    }
-
-    .history-item{
-      background:#f7f7f7;
-      padding:8px;
-      border-radius:6px;
-      margin:5px 0;
-      cursor:pointer;
-    }
-
-    .history-item:hover{
-      background:#ececec;
-    }
-  </style>
 </head>
 
 <body>
 
-<div id="chat-container">
+<div class="background-grid"></div>
 
-<h2>🤖 Gemini Chatbot</h2>
+<div class="dashboard">
 
-<div id="messages"></div>
+    <!-- LEFT -->
 
-<div id="input-area">
-<input
-id="userInput"
-type="text"
-placeholder="Type your message..."
->
+    <aside class="sidebar">
 
-<button onclick="sendMessage()">
-Send
-</button>
+        <h2>AI CORE</h2>
+
+        <div class="panel">
+
+            <h3>System</h3>
+
+            <div class="stat">
+
+                <label>CPU</label>
+
+                <div class="progress">
+
+                    <div class="cpu"></div>
+
+                </div>
+
+            </div>
+
+            <div class="stat">
+
+                <label>Memory</label>
+
+                <div class="progress">
+
+                    <div class="memory"></div>
+
+                </div>
+
+            </div>
+
+            <div class="stat">
+
+                <label>Network</label>
+
+                <div class="progress">
+
+                    <div class="network"></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="panel">
+
+            <h3>Radar</h3>
+
+            <div class="radar">
+
+                <div class="ring r1"></div>
+
+                <div class="ring r2"></div>
+
+                <div class="ring r3"></div>
+
+                <div class="scanner"></div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- CENTER -->
+
+    <main>
+
+        <header>
+
+            <h1>🤖 AI ASSISTANT</h1>
+
+            <p>Groq Powered Chatbot</p>
+
+        </header>
+
+        <section id="messages"></section>
+
+        <div class="input-area">
+
+            <input
+            id="userInput"
+            placeholder="Ask anything...">
+
+            <button onclick="sendMessage()">
+
+                SEND
+
+            </button>
+
+        </div>
+
+    </main>
+
+    <!-- RIGHT -->
+
+    <aside class="sidebar">
+
+        <h2>OPTIONS</h2>
+
+        <div class="panel">
+
+            <button onclick="clearChat()">
+
+                🗑 Clear
+
+            </button>
+
+            <button onclick="saveChat()">
+
+                💾 Save
+
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            <h3>History</h3>
+
+            <div id="history"></div>
+
+        </div>
+
+    </aside>
 
 </div>
 
-<div id="controls">
-<button onclick="clearChat()">🗑️ Clear Chat</button>
-<button onclick="saveChat()">💾 Save</button>
-</div>
-
-<div id="history-container">
-<strong>📜 History</strong>
-<div id="history"></div>
-</div>
-
-</div>
-
-<script>
-
-const API_URL="https://chatbot-2-vfrj.onrender.com/chat";
-
-const messagesDiv=document.getElementById("messages");
-const userInput=document.getElementById("userInput");
-const historyDiv=document.getElementById("history");
-
-let history=[];
-
-function addMessage(text,sender){
-
-const div=document.createElement("div");
-
-div.className=`msg ${sender}`;
-
-div.innerText=text;
-
-messagesDiv.appendChild(div);
-
-messagesDiv.scrollTop=messagesDiv.scrollHeight;
-
-}
-
-async function sendMessage(){
-
-const message=userInput.value.trim();
-
-if(!message) return;
-
-addMessage(message,"user");
-
-userInput.value="";
-
-try{
-
-const res=await fetch(API_URL,{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-message
-})
-
-});
-
-const data=await res.json();
-
-if(data.reply){
-
-addMessage(data.reply,"bot");
-
-addToHistory(message,data.reply);
-
-saveChat();
-
-}else{
-
-addMessage(data.error || "No response from server","bot");
-
-}
-
-}catch(err){
-
-addMessage("❌ "+err.message,"bot");
-
-}
-
-}
-
-function addToHistory(user,bot){
-
-const entry={
-user,
-bot
-};
-
-history.push(entry);
-
-const item=document.createElement("div");
-
-item.className="history-item";
-
-item.innerText=`You : ${user}`;
-
-item.onclick=()=>{
-
-addMessage(entry.user,"user");
-
-addMessage(entry.bot,"bot");
-
-};
-
-historyDiv.appendChild(item);
-
-}
-
-function saveChat(){
-
-localStorage.setItem("savedChat",JSON.stringify(history));
-
-}
-
-function clearChat(){
-
-messagesDiv.innerHTML="";
-
-historyDiv.innerHTML="";
-
-history=[];
-
-localStorage.removeItem("savedChat");
-
-}
-
-window.onload=()=>{
-
-const saved=localStorage.getItem("savedChat");
-
-if(!saved) return;
-
-history=JSON.parse(saved);
-
-history.forEach(chat=>{
-
-addMessage(chat.user,"user");
-
-addMessage(chat.bot,"bot");
-
-const item=document.createElement("div");
-
-item.className="history-item";
-
-item.innerText=`You : ${chat.user}`;
-
-item.onclick=()=>{
-
-addMessage(chat.user,"user");
-
-addMessage(chat.bot,"bot");
-
-};
-
-historyDiv.appendChild(item);
-
-});
-
-};
-
-userInput.addEventListener("keypress",e=>{
-
-if(e.key==="Enter"){
-
-sendMessage();
-
-}
-
-});
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
